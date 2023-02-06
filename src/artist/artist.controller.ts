@@ -3,22 +3,20 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
+  Put,
+  HttpException,
+  HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import { ArtistService } from './artist.service';
-import { CreateArtistDto } from './dto/create-artist.dto';
-import { UpdateArtistDto } from './dto/update-artist.dto';
+import { validate as uuidValidate } from 'uuid';
+import { Artist } from './entities/artist.entity';
 
 @Controller('artist')
 export class ArtistController {
   constructor(private readonly artistService: ArtistService) {}
-
-  @Post()
-  create(@Body() createArtistDto: CreateArtistDto) {
-    return this.artistService.create(createArtistDto);
-  }
 
   @Get()
   findAll() {
@@ -27,16 +25,48 @@ export class ArtistController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.artistService.findOne(+id);
+    if (!uuidValidate(id)) {
+      throw new HttpException('Invalid artist id', HttpStatus.BAD_REQUEST);
+    }
+
+    return this.artistService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateArtistDto: UpdateArtistDto) {
-    return this.artistService.update(+id, updateArtistDto);
+  @Post()
+  create(@Body() createArtistDto: Omit<Artist, 'id'>) {
+    if (!createArtistDto.name || !createArtistDto.grammy) {
+      throw new HttpException(
+        'Required fields are not provided',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    return this.artistService.create(createArtistDto);
+  }
+
+  @Put(':id')
+  update(@Param('id') id: string, @Body() updateArtistDto: Omit<Artist, 'id'>) {
+    if (!uuidValidate(id)) {
+      throw new HttpException('Invalid artist id', HttpStatus.BAD_REQUEST);
+    }
+
+    if (
+      typeof updateArtistDto.name !== 'string' ||
+      typeof updateArtistDto.grammy !== 'boolean'
+    ) {
+      throw new HttpException('Invalid artist body', HttpStatus.BAD_REQUEST);
+    }
+
+    return this.artistService.update(id, updateArtistDto);
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string) {
-    return this.artistService.remove(+id);
+    if (!uuidValidate(id)) {
+      throw new HttpException('Invalid artist id', HttpStatus.BAD_REQUEST);
+    }
+
+    return this.artistService.remove(id);
   }
 }
