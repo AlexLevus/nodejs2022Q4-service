@@ -1,12 +1,15 @@
 import { v4 as uuidv4 } from 'uuid';
+import { Exclude } from 'class-transformer';
 
 export class User {
   id: string;
   login: string;
-  password: string;
   version: number;
   createdAt: number;
   updatedAt: number;
+
+  @Exclude()
+  password: string;
 
   constructor(
     login: string,

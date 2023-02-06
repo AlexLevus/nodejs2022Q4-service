@@ -9,6 +9,8 @@ import {
   HttpStatus,
   Put,
   HttpCode,
+  ClassSerializerInterceptor,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -19,11 +21,13 @@ import { validate as uuidValidate } from 'uuid';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @Get()
   findAll() {
     return this.userService.findAll();
   }
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @Get(':id')
   findOne(@Param('id') id: string) {
     if (!uuidValidate(id)) {
@@ -32,6 +36,7 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     if (!createUserDto.login || !createUserDto.password) {
@@ -44,6 +49,7 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @Put(':id')
   update(
     @Param('id') id: string,

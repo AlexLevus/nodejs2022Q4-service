@@ -9,8 +9,7 @@ export class UserService {
   constructor(private userRepository: UserRepository) {}
 
   async findAll() {
-    const users = await this.userRepository.all();
-    return users.map(({ password, ...safeUser }) => safeUser);
+    return await this.userRepository.all();
   }
 
   async findOne(id: string) {
@@ -23,15 +22,12 @@ export class UserService {
       );
     }
 
-    const { password, ...safeUser } = user;
-
-    return safeUser;
+    return user;
   }
 
   async create(createUserDto: CreateUserDto) {
     const user = new User(createUserDto.login, createUserDto.password);
-    const { password, ...safeUser } = await this.userRepository.create(user);
-    return safeUser;
+    return await this.userRepository.create(user);
   }
 
   async update(id: string, updatePasswordDto: UpdatePasswordDto) {
