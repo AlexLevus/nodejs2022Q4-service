@@ -1,21 +1,21 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { TrackModule } from './track/track.module';
 import { UserModule } from './user/user.module';
 import { ArtistModule } from './artist/artist.module';
-import { FavoritesModule } from './favorites/favorites.module';
 import { AlbumModule } from './album/album.module';
+import { InMemoryDbModule } from './in-memory-db/in-memory-db.module';
+import { FavoriteModule } from './favorite/favorite.module';
 
 @Module({
   imports: [
     TrackModule,
     UserModule,
     ArtistModule,
-    FavoritesModule,
     AlbumModule,
+    InMemoryDbModule,
+    FavoriteModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
