@@ -5,27 +5,27 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common';
-import { AlbumRepository } from './album.repository';
 import { Album } from './entities/album.entity';
 import { TrackService } from '../track/track.service';
 import { FavoriteService } from '../favorite/favorite.service';
+import { PrismaService } from 'nestjs-prisma';
 
 @Injectable()
 export class AlbumService {
   constructor(
-    private albumRepository: AlbumRepository,
     @Inject(forwardRef(() => TrackService))
     private trackService: TrackService,
     @Inject(forwardRef(() => FavoriteService))
     private favoriteService: FavoriteService,
+    private prisma: PrismaService,
   ) {}
 
   async findAll() {
-    return this.albumRepository.all();
+    return this.prisma.album.findMany();
   }
 
   async findOne(id: string, customError?: boolean) {
-    const album = await this.albumRepository.findOne(id);
+    const album = await this.prisma.album.findUnique({ where: { id } });
 
     if (!album && !customError) {
       throw new HttpException(
@@ -43,17 +43,13 @@ export class AlbumService {
   }
 
   async create(createAlbumDto: Omit<Album, 'id'>) {
-    const album = new Album(
-      createAlbumDto.name,
-      createAlbumDto.year,
-      createAlbumDto.artistId,
-    );
-
-    return this.albumRepository.create(album);
+    return this.prisma.album.create({
+      data: createAlbumDto,
+    });
   }
 
   async update(id: string, updateAlbumDto: Omit<Album, 'id'>) {
-    const album = await this.albumRepository.findOne(id);
+    const album = await this.prisma.album.findUnique({ where: { id } });
 
     if (!album) {
       throw new HttpException(
@@ -62,14 +58,19 @@ export class AlbumService {
       );
     }
 
-    return this.albumRepository.update(id, {
-      ...album,
-      ...updateAlbumDto,
+    return this.prisma.album.update({
+      data: {
+        ...album,
+        ...updateAlbumDto,
+      },
+      where: {
+        id,
+      },
     });
   }
 
   async remove(id: string) {
-    const album = await this.albumRepository.findOne(id);
+    const album = await this.prisma.album.findUnique({ where: { id } });
 
     if (!album) {
       throw new HttpException(
@@ -80,6 +81,10 @@ export class AlbumService {
 
     await this.trackService.clearAlbumTracks(id);
     await this.favoriteService.removeAlbumFromFavorite(id);
-    await this.albumRepository.delete(id);
+    await this.prisma.album.delete({
+      where: {
+        id,
+      },
+    });
   }
 }
