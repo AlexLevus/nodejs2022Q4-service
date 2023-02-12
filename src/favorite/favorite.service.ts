@@ -57,7 +57,7 @@ export class FavoriteService {
       });
     }
 
-    return this.prisma.favorite.update({
+    this.prisma.favorite.update({
       data: {
         [name]: [...favorites[name], id],
       },

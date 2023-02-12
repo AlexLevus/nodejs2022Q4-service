@@ -91,7 +91,6 @@ export class TrackService {
 
     for (const artistTrack of artistTracks) {
       artistTrack.artistId = null;
-      // await this.trackRepository.update(artistTrack.id, artistTrack);
       await this.favoriteService.removeTrackFromFavorite(artistTrack.id);
     }
   }
@@ -102,7 +101,6 @@ export class TrackService {
 
     for (const albumTrack of albumTracks) {
       albumTrack.albumId = null;
-      // await this.trackRepository.update(albumTrack.id, albumTrack);
       await this.favoriteService.removeTrackFromFavorite(albumTrack.id);
     }
   }
