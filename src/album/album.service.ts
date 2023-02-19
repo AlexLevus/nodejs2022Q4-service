@@ -37,11 +37,6 @@ export class AlbumService {
     return album;
   }
 
-  async findByIds(ids: string[]) {
-    const albums = await this.findAll();
-    return albums.filter((album) => ids.includes(album.id));
-  }
-
   async create(createAlbumDto: Omit<Album, 'id'>) {
     return this.prisma.album.create({
       data: createAlbumDto,
