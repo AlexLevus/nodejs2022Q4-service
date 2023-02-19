@@ -1,0 +1,29 @@
+services:
+  db:
+    image: levis38/postgres:latest
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - ${POSTGRES_PORT}:5432
+    volumes:
+      - data:/var/lib/postgresql
+    networks:
+      - custom-bridge
+  api:
+    build:
+      context: .
+      dockerfile: ./src/Dockerfile
+    env_file:
+      - .env
+    ports:
+      - ${PORT}:${PORT}
+    depends_on:
+      - db
+    networks:
+      - custom-bridge
+
+volumes:
+  data:
+networks:
+  custom-bridge:
