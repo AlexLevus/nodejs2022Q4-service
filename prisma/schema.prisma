@@ -11,44 +11,65 @@ generator client {
 }
 
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
+  id        String @id @default(uuid())
   login     String
   password  String
-  version   Int      @default(1)
+  version   Int    @default(1)
   createdAt BigInt
   updatedAt BigInt
 }
 
 model Artist {
-  id         String    @id @default(uuid()) @db.Uuid
-  name       String
-  grammy     Boolean
-  album      Album[]
-  track      Track[]
+  id             String          @id @default(uuid())
+  name           String
+  grammy         Boolean
+  album          Album[]
+  track          Track[]
+  favoriteArtist FavoriteArtist?
 }
 
 model Album {
-  id         String    @id @default(uuid()) @db.Uuid
-  name       String
-  year       Int
-  artist     Artist?   @relation(fields: [artistId], references: [id])
-  artistId   String?    @db.Uuid
-  track      Track[]
+  id            String         @id @default(uuid())
+  name          String
+  year          Int
+  artist        Artist?        @relation(fields: [artistId], references: [id])
+  artistId      String?
+  track         Track[]
+  favoriteAlbum FavoriteAlbum?
 }
 
 model Track {
-  id         String    @id @default(uuid()) @db.Uuid
-  name       String
-  duration   Int
-  artist     Artist?    @relation(fields: [artistId], references: [id])
-  artistId   String?    @db.Uuid
-  album      Album?     @relation(fields: [albumId], references: [id])
-  albumId    String?    @db.Uuid
+  id            String         @id @default(uuid())
+  name          String
+  duration      Int
+  artist        Artist?        @relation(fields: [artistId], references: [id])
+  artistId      String?
+  album         Album?         @relation(fields: [albumId], references: [id])
+  albumId       String?
+  favoriteTrack FavoriteTrack?
 }
 
 model Favorite {
-  id      String   @id @default(uuid()) @db.Uuid
+  id      String   @id @default(uuid())
   artists String[]
   albums  String[]
   tracks  String[]
+}
+
+model FavoriteAlbum {
+  id      Int    @id @default(autoincrement())
+  albumId String @unique
+  album   Album  @relation(fields: [albumId], references: [id])
+}
+
+model FavoriteArtist {
+  id       Int    @id @default(autoincrement())
+  artistId String @unique
+  artist   Artist @relation(fields: [artistId], references: [id])
+}
+
+model FavoriteTrack {
+  id      Int    @id @default(autoincrement())
+  trackId String @unique
+  track   Track  @relation(fields: [trackId], references: [id])
 }

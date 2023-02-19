@@ -23,71 +23,35 @@ export class FavoriteService {
   ) {}
 
   async findAll() {
-    let [favorites] = await this.prisma.favorite.findMany();
-
-    if (!favorites) {
-      favorites = await this.prisma.favorite.create({
-        data: {
-          artists: [],
-          albums: [],
-          tracks: [],
+    const favoriteTracks = (
+      await this.prisma.favoriteTrack.findMany({
+        include: {
+          track: true,
         },
-      });
+      })
+    ).map((record) => record.track);
 
-      return favorites;
-    }
+    const favoriteAlbums = (
+      await this.prisma.favoriteAlbum.findMany({
+        include: {
+          album: true,
+        },
+      })
+    ).map((record) => record.album);
+
+    const favoriteArtists = (
+      await this.prisma.favoriteArtist.findMany({
+        include: {
+          artist: true,
+        },
+      })
+    ).map((record) => record.artist);
 
     return {
-      artists: await this.artistService.findByIds(favorites.artists),
-      albums: await this.albumService.findByIds(favorites.albums),
-      tracks: await this.trackService.findByIds(favorites.tracks),
+      artists: favoriteArtists,
+      albums: favoriteAlbums,
+      tracks: favoriteTracks,
     };
-  }
-
-  async like(name: string, id: string) {
-    let [favorites] = await this.prisma.favorite.findMany();
-
-    if (!favorites) {
-      favorites = await this.prisma.favorite.create({
-        data: {
-          artists: [],
-          albums: [],
-          tracks: [],
-        },
-      });
-    }
-
-    this.prisma.favorite.update({
-      data: {
-        [name]: [...favorites[name], id],
-      },
-      where: {
-        id: favorites.id,
-      },
-    });
-  }
-
-  async dislike(name: string, id: string) {
-    let [favorites] = await this.prisma.favorite.findMany();
-
-    if (!favorites) {
-      favorites = await this.prisma.favorite.create({
-        data: {
-          artists: [],
-          albums: [],
-          tracks: [],
-        },
-      });
-    }
-
-    return this.prisma.favorite.update({
-      data: {
-        [name]: favorites[name].filter((favoriteId) => favoriteId !== id),
-      },
-      where: {
-        id: favorites.id,
-      },
-    });
   }
 
   async addTrackToFavorite(id: string) {
@@ -100,7 +64,11 @@ export class FavoriteService {
       );
     }
 
-    await this.like('tracks', id);
+    await this.prisma.favoriteTrack.create({
+      data: {
+        trackId: id,
+      },
+    });
   }
 
   async removeTrackFromFavorite(id: string) {
@@ -113,7 +81,11 @@ export class FavoriteService {
       );
     }
 
-    await this.dislike('tracks', id);
+    await this.prisma.favoriteTrack.deleteMany({
+      where: {
+        trackId: id,
+      },
+    });
   }
 
   async addAlbumToFavorite(id: string) {
@@ -126,7 +98,11 @@ export class FavoriteService {
       );
     }
 
-    await this.like('albums', id);
+    await this.prisma.favoriteAlbum.create({
+      data: {
+        albumId: id,
+      },
+    });
   }
 
   async removeAlbumFromFavorite(id: string) {
@@ -139,7 +115,11 @@ export class FavoriteService {
       );
     }
 
-    await this.dislike('albums', id);
+    await this.prisma.favoriteAlbum.deleteMany({
+      where: {
+        albumId: id,
+      },
+    });
   }
 
   async addArtistToFavorite(id: string) {
@@ -152,7 +132,11 @@ export class FavoriteService {
       );
     }
 
-    await this.like('artists', id);
+    await this.prisma.favoriteArtist.create({
+      data: {
+        artistId: id,
+      },
+    });
   }
 
   async removeArtistFromFavorite(id: string) {
@@ -165,6 +149,10 @@ export class FavoriteService {
       );
     }
 
-    await this.dislike('artists', id);
+    await this.prisma.favoriteArtist.deleteMany({
+      where: {
+        artistId: id,
+      },
+    });
   }
 }
