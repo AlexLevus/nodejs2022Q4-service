@@ -11,9 +11,8 @@ services:
     networks:
       - my-net
   api:
-    build:
-      context: .
-      dockerfile: ./src/Dockerfile
+    image: levis38/home-library-api:latest
+    restart: always
     env_file:
       - .env
     ports:
