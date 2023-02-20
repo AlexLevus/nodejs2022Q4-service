@@ -9,7 +9,7 @@ services:
     volumes:
       - data:/var/lib/postgresql
     networks:
-      - custom-bridge
+      - my-net
   api:
     build:
       context: .
@@ -21,9 +21,9 @@ services:
     depends_on:
       - db
     networks:
-      - custom-bridge
+      - my-net
 
 volumes:
   data:
 networks:
-  custom-bridge:
+  my-net:
