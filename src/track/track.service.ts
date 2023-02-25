@@ -6,24 +6,24 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { UpdateTrackDto } from './dto/update-track.dto';
-import { TrackRepository } from './track.repository';
 import { Track } from './entities/track.entity';
 import { FavoriteService } from '../favorite/favorite.service';
+import { PrismaService } from 'nestjs-prisma';
 
 @Injectable()
 export class TrackService {
   constructor(
-    private trackRepository: TrackRepository,
     @Inject(forwardRef(() => FavoriteService))
     private favoriteService: FavoriteService,
+    private prisma: PrismaService,
   ) {}
 
   async findAll() {
-    return this.trackRepository.all();
+    return this.prisma.track.findMany();
   }
 
   async findOne(id: string, customError?: boolean) {
-    const track = await this.trackRepository.findOne(id);
+    const track = await this.prisma.track.findUnique({ where: { id } });
 
     if (!track && !customError) {
       throw new HttpException(
@@ -41,17 +41,13 @@ export class TrackService {
   }
 
   async create(track: Track) {
-    const trackToCreate = new Track(
-      track.name,
-      track.duration,
-      track.artistId,
-      track.albumId,
-    );
-    return this.trackRepository.create(trackToCreate);
+    return this.prisma.track.create({
+      data: track,
+    });
   }
 
   async update(id: string, updateTrackDto: UpdateTrackDto) {
-    const track = await this.trackRepository.findOne(id);
+    const track = await this.prisma.track.findUnique({ where: { id } });
 
     if (!track) {
       throw new HttpException(
@@ -60,14 +56,19 @@ export class TrackService {
       );
     }
 
-    return this.trackRepository.update(id, {
-      ...track,
-      ...updateTrackDto,
+    return this.prisma.track.update({
+      data: {
+        ...track,
+        ...updateTrackDto,
+      },
+      where: {
+        id,
+      },
     });
   }
 
   async remove(id: string) {
-    const track = await this.trackRepository.findOne(id);
+    const track = await this.prisma.track.findUnique({ where: { id } });
 
     if (!track) {
       throw new HttpException(
@@ -77,7 +78,11 @@ export class TrackService {
     }
 
     await this.favoriteService.removeTrackFromFavorite(id);
-    await this.trackRepository.delete(id);
+    await this.prisma.track.delete({
+      where: {
+        id,
+      },
+    });
   }
 
   async clearArtistTracks(artistId: string) {
@@ -86,7 +91,6 @@ export class TrackService {
 
     for (const artistTrack of artistTracks) {
       artistTrack.artistId = null;
-      await this.trackRepository.update(artistTrack.id, artistTrack);
       await this.favoriteService.removeTrackFromFavorite(artistTrack.id);
     }
   }
@@ -97,7 +101,6 @@ export class TrackService {
 
     for (const albumTrack of albumTracks) {
       albumTrack.albumId = null;
-      await this.trackRepository.update(albumTrack.id, albumTrack);
       await this.favoriteService.removeTrackFromFavorite(albumTrack.id);
     }
   }

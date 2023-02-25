@@ -5,35 +5,57 @@ import {
   Inject,
   Injectable,
 } from '@nestjs/common';
-import { FavoriteRepository } from './favorite.repository';
 import { TrackService } from '../track/track.service';
 import { AlbumService } from '../album/album.service';
 import { ArtistService } from '../artist/artist.service';
+import { PrismaService } from 'nestjs-prisma';
 
 @Injectable()
 export class FavoriteService {
   constructor(
-    private favoriteRepository: FavoriteRepository,
     @Inject(forwardRef(() => TrackService))
     private readonly trackService: TrackService,
     @Inject(forwardRef(() => AlbumService))
     private readonly albumService: AlbumService,
     @Inject(forwardRef(() => ArtistService))
     private readonly artistService: ArtistService,
+    private prisma: PrismaService,
   ) {}
 
   async findAll() {
-    const favs = await this.favoriteRepository.all();
+    const favoriteTracks = (
+      await this.prisma.favoriteTrack.findMany({
+        include: {
+          track: true,
+        },
+      })
+    ).map((record) => record.track);
+
+    const favoriteAlbums = (
+      await this.prisma.favoriteAlbum.findMany({
+        include: {
+          album: true,
+        },
+      })
+    ).map((record) => record.album);
+
+    const favoriteArtists = (
+      await this.prisma.favoriteArtist.findMany({
+        include: {
+          artist: true,
+        },
+      })
+    ).map((record) => record.artist);
 
     return {
-      artists: await this.artistService.findByIds(favs.artists),
-      albums: await this.albumService.findByIds(favs.albums),
-      tracks: await this.trackService.findByIds(favs.tracks),
+      artists: favoriteArtists,
+      albums: favoriteAlbums,
+      tracks: favoriteTracks,
     };
   }
 
   async addTrackToFavorite(id: string) {
-    const track = await this.trackService.findOne(id, true);
+    const track = await this.prisma.track.findUnique({ where: { id } });
 
     if (!track) {
       throw new HttpException(
@@ -42,7 +64,11 @@ export class FavoriteService {
       );
     }
 
-    await this.favoriteRepository.like('tracks', id);
+    await this.prisma.favoriteTrack.create({
+      data: {
+        trackId: id,
+      },
+    });
   }
 
   async removeTrackFromFavorite(id: string) {
@@ -55,11 +81,15 @@ export class FavoriteService {
       );
     }
 
-    await this.favoriteRepository.dislike('tracks', id);
+    await this.prisma.favoriteTrack.deleteMany({
+      where: {
+        trackId: id,
+      },
+    });
   }
 
   async addAlbumToFavorite(id: string) {
-    const album = await this.albumService.findOne(id, true);
+    const album = await this.prisma.album.findUnique({ where: { id } });
 
     if (!album) {
       throw new HttpException(
@@ -68,11 +98,15 @@ export class FavoriteService {
       );
     }
 
-    await this.favoriteRepository.like('albums', id);
+    await this.prisma.favoriteAlbum.create({
+      data: {
+        albumId: id,
+      },
+    });
   }
 
   async removeAlbumFromFavorite(id: string) {
-    const album = await this.albumService.findOne(id, true);
+    const album = await this.prisma.album.findUnique({ where: { id } });
 
     if (!album) {
       throw new HttpException(
@@ -81,11 +115,15 @@ export class FavoriteService {
       );
     }
 
-    await this.favoriteRepository.dislike('albums', id);
+    await this.prisma.favoriteAlbum.deleteMany({
+      where: {
+        albumId: id,
+      },
+    });
   }
 
   async addArtistToFavorite(id: string) {
-    const artist = await this.artistService.findOne(id, true);
+    const artist = await this.prisma.artist.findUnique({ where: { id } });
 
     if (!artist) {
       throw new HttpException(
@@ -94,11 +132,15 @@ export class FavoriteService {
       );
     }
 
-    await this.favoriteRepository.like('artists', id);
+    await this.prisma.favoriteArtist.create({
+      data: {
+        artistId: id,
+      },
+    });
   }
 
   async removeArtistFromFavorite(id: string) {
-    const artist = await this.artistService.findOne(id, true);
+    const artist = await this.prisma.artist.findUnique({ where: { id } });
 
     if (!artist) {
       throw new HttpException(
@@ -107,6 +149,10 @@ export class FavoriteService {
       );
     }
 
-    await this.favoriteRepository.dislike('artists', id);
+    await this.prisma.favoriteArtist.deleteMany({
+      where: {
+        artistId: id,
+      },
+    });
   }
 }
