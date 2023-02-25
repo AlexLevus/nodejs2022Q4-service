@@ -34,6 +34,13 @@ export class AlbumController {
 
   @Post()
   create(@Body() createAlbumDto: Omit<Album, 'id'>) {
+    if (
+      typeof createAlbumDto.name !== 'string' ||
+      typeof createAlbumDto.year !== 'number'
+    ) {
+      throw new HttpException('Invalid album body', HttpStatus.BAD_REQUEST);
+    }
+
     return this.albumService.create(createAlbumDto);
   }
 
@@ -47,7 +54,7 @@ export class AlbumController {
       typeof updateAlbumDto.name !== 'string' ||
       typeof updateAlbumDto.year !== 'number'
     ) {
-      throw new HttpException('Invalid artist body', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Invalid album body', HttpStatus.BAD_REQUEST);
     }
 
     return this.albumService.update(id, updateAlbumDto);
