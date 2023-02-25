@@ -1,6 +1,8 @@
 services:
   db:
-    image: levis38/postgres:latest
+    build:
+      context: .
+      dockerfile: ./prisma/Dockerfile
     restart: always
     env_file:
       - .env
@@ -11,7 +13,9 @@ services:
     networks:
       - my-net
   api:
-    image: levis38/home-library-api:latest
+    build:
+      context: .
+      dockerfile: ./src/Dockerfile
     restart: always
     env_file:
       - .env
