@@ -17,18 +17,18 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { validate as uuidValidate } from 'uuid';
 
-@Controller('user')
+@Controller()
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @Get()
+  @Get('user')
   findAll() {
     return this.userService.findAll();
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @Get(':id')
+  @Get('user/:id')
   findOne(@Param('id') id: string) {
     if (!uuidValidate(id)) {
       throw new HttpException('Invalid user id', HttpStatus.BAD_REQUEST);
@@ -37,7 +37,7 @@ export class UserController {
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @Post()
+  @Post('auth/signup')
   create(@Body() createUserDto: CreateUserDto) {
     if (!createUserDto.login || !createUserDto.password) {
       throw new HttpException(
@@ -50,7 +50,7 @@ export class UserController {
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @Put(':id')
+  @Put('user/:id')
   update(
     @Param('id') id: string,
     @Body() updatePasswordDto: UpdatePasswordDto,
@@ -66,10 +66,10 @@ export class UserController {
       );
     }
 
-    return this.userService.update(id, updatePasswordDto);
+    return this.userService.updateUserPassword(id, updatePasswordDto);
   }
 
-  @Delete(':id')
+  @Delete('user/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string) {
     if (!uuidValidate(id)) {

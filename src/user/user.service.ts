@@ -2,6 +2,8 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { PrismaService } from 'nestjs-prisma';
+import * as bcrypt from 'bcrypt';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 function exclude<User, Key extends keyof User>(
   user: User,
@@ -40,11 +42,28 @@ export class UserService {
     return exclude(user, ['password']);
   }
 
+  async getUser(login: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { login },
+    });
+
+    if (!user) {
+      throw new HttpException(
+        'User with provided login is not found',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    return user;
+  }
+
   async create(createUserDto: CreateUserDto) {
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
     const user = await this.prisma.user.create({
       data: {
         login: createUserDto.login,
-        password: createUserDto.password,
+        password: hashedPassword,
         createdAt: new Date().getTime(),
         updatedAt: new Date().getTime(),
       },
@@ -53,7 +72,29 @@ export class UserService {
     return exclude(user, ['password']);
   }
 
-  async update(id: string, updatePasswordDto: UpdatePasswordDto) {
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+
+    if (!user) {
+      throw new HttpException(
+        'User with provided id is not found',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      data: {
+        ...updateUserDto,
+        updatedAt: new Date().getTime(),
+        version: user.version + 1,
+      },
+      where: { id },
+    });
+
+    return exclude(updatedUser, ['password']);
+  }
+
+  async updateUserPassword(id: string, updatePasswordDto: UpdatePasswordDto) {
     const user = await this.prisma.user.findUnique({ where: { id } });
 
     if (!user) {
@@ -67,16 +108,9 @@ export class UserService {
       throw new HttpException('Incorrect password', HttpStatus.FORBIDDEN);
     }
 
-    const updatedUser = await this.prisma.user.update({
-      data: {
-        password: updatePasswordDto.newPassword,
-        updatedAt: new Date().getTime(),
-        version: user.version + 1,
-      },
-      where: { id },
+    return await this.update(user.id, {
+      password: updatePasswordDto.newPassword,
     });
-
-    return exclude(updatedUser, ['password']);
   }
 
   async remove(id: string) {
