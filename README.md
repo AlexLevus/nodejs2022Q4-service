@@ -8,7 +8,7 @@
 ## Downloading
 
 ```
-git clone https://github.com/AlexLevus/nodejs2022Q4-service
+git clone {repository URL}
 ```
 
 ## Installing NPM modules
@@ -16,8 +16,6 @@ git clone https://github.com/AlexLevus/nodejs2022Q4-service
 ```
 npm install
 ```
-
-## Add PORT to .env file (for example see .env.example)
 
 ## Running application
 
