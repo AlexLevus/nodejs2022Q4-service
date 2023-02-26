@@ -13,14 +13,18 @@ export class AuthService {
   ) {}
 
   async validateUser(login: string, password: string): Promise<User | null> {
+    if (typeof login !== 'string' || typeof password !== 'string') {
+      throw new HttpException('Invalid request body', HttpStatus.BAD_REQUEST);
+    }
+
     const user = await this.userService.getUser(login);
     if (!user) {
-      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Invalid credentials', HttpStatus.FORBIDDEN);
     }
 
     const passwordValid = await bcrypt.compare(password, user.password);
     if (!passwordValid) {
-      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Invalid credentials', HttpStatus.FORBIDDEN);
     }
 
     return user;
@@ -36,6 +40,10 @@ export class AuthService {
     await this.updateRefreshToken(validatedUser.id, tokens.refreshToken);
 
     return this.getTokens(validatedUser.id, validatedUser.login);
+  }
+
+  async refreshToken(token: string) {
+
   }
 
   async updateRefreshToken(userId: string, refreshToken: string) {

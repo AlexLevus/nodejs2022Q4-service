@@ -11,22 +11,26 @@ import {
   HttpCode,
   ClassSerializerInterceptor,
   UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { validate as uuidValidate } from 'uuid';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller()
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
   @Get('user')
   findAll() {
     return this.userService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
   @Get('user/:id')
   findOne(@Param('id') id: string) {
@@ -37,18 +41,19 @@ export class UserController {
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @Post('auth/signup')
-  create(@Body() createUserDto: CreateUserDto) {
-    if (!createUserDto.login || !createUserDto.password) {
+  @Post(['user', 'auth/signup'])
+  create(@Body() { login, password }: CreateUserDto) {
+    if (typeof login !== 'string' || typeof password !== 'string') {
       throw new HttpException(
         'Required fields are not provided',
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    return this.userService.create(createUserDto);
+    return this.userService.create({ login, password });
   }
 
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
   @Put('user/:id')
   update(
@@ -69,6 +74,7 @@ export class UserController {
     return this.userService.updateUserPassword(id, updatePasswordDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete('user/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string) {

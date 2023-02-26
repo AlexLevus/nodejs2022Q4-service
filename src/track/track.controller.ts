@@ -9,11 +9,14 @@ import {
   HttpStatus,
   Put,
   HttpCode,
+  UseGuards,
 } from '@nestjs/common';
 import { TrackService } from './track.service';
 import { Track } from './entities/track.entity';
 import { validate as uuidValidate } from 'uuid';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('track')
 export class TrackController {
   constructor(private readonly trackService: TrackService) {}
