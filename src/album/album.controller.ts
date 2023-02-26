@@ -8,12 +8,13 @@ import {
   Put,
   HttpCode,
   HttpStatus,
-  HttpException, UseGuards,
+  HttpException,
+  UseGuards,
 } from '@nestjs/common';
 import { AlbumService } from './album.service';
 import { Album } from './entities/album.entity';
 import { validate as uuidValidate } from 'uuid';
-import {JwtAuthGuard} from "../auth/jwt-auth.guard";
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @UseGuards(JwtAuthGuard)
 @Controller('album')

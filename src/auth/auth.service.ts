@@ -39,11 +39,35 @@ export class AuthService {
     const tokens = await this.getTokens(validatedUser.id, validatedUser.login);
     await this.updateRefreshToken(validatedUser.id, tokens.refreshToken);
 
-    return this.getTokens(validatedUser.id, validatedUser.login);
+    return tokens;
   }
 
   async refreshToken(token: string) {
+    const decodedJwtRefreshToken = this.jwtService.decode(token) as {
+      userId: string;
+      login: string;
+      exp: number;
+    };
 
+    if (!decodedJwtRefreshToken) {
+      throw new HttpException('Token is invalid', HttpStatus.FORBIDDEN);
+    }
+
+    if (decodedJwtRefreshToken.exp > Date.now()) {
+      throw new HttpException('Token is expired', HttpStatus.FORBIDDEN);
+    }
+
+    const tokens = await this.getTokens(
+      decodedJwtRefreshToken.userId,
+      decodedJwtRefreshToken.login,
+    );
+
+    await this.updateRefreshToken(
+      decodedJwtRefreshToken.userId,
+      tokens.refreshToken,
+    );
+
+    return tokens;
   }
 
   async updateRefreshToken(userId: string, refreshToken: string) {
@@ -58,7 +82,7 @@ export class AuthService {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
         {
-          sub: id,
+          userId: id,
           login,
         },
         {
@@ -68,7 +92,7 @@ export class AuthService {
       ),
       this.jwtService.signAsync(
         {
-          sub: id,
+          userId: id,
           login,
         },
         {

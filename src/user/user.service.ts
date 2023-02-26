@@ -60,6 +60,14 @@ export class UserService {
   async create(createUserDto: CreateUserDto) {
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
+    const isUserCreated = await this.prisma.user.findUnique({
+      where: { login: createUserDto.login },
+    });
+
+    if (isUserCreated) {
+      return exclude(isUserCreated, ['password']);
+    }
+
     const user = await this.prisma.user.create({
       data: {
         login: createUserDto.login,
@@ -94,7 +102,10 @@ export class UserService {
     return exclude(updatedUser, ['password']);
   }
 
-  async updateUserPassword(id: string, updatePasswordDto: UpdatePasswordDto) {
+  async updateUserPassword(
+    id: string,
+    { oldPassword, newPassword }: UpdatePasswordDto,
+  ) {
     const user = await this.prisma.user.findUnique({ where: { id } });
 
     if (!user) {
@@ -104,12 +115,13 @@ export class UserService {
       );
     }
 
-    if (user.password !== updatePasswordDto.oldPassword) {
+    const passwordValid = await bcrypt.compare(oldPassword, user.password);
+    if (!passwordValid) {
       throw new HttpException('Incorrect password', HttpStatus.FORBIDDEN);
     }
 
     return await this.update(user.id, {
-      password: updatePasswordDto.newPassword,
+      password: newPassword,
     });
   }
 
