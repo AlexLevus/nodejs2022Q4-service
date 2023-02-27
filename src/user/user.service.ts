@@ -68,16 +68,31 @@ export class UserService {
       return exclude(isUserCreated, ['password']);
     }
 
-    const user = await this.prisma.user.create({
-      data: {
-        login: createUserDto.login,
-        password: hashedPassword,
-        createdAt: new Date().getTime(),
-        updatedAt: new Date().getTime(),
-      },
-    });
+    try {
+      const user = await this.prisma.user
+        .create({
+          data: {
+            login: createUserDto.login,
+            password: hashedPassword,
+            createdAt: new Date().getTime(),
+            updatedAt: new Date().getTime(),
+          },
+        })
+        .catch();
 
-    return exclude(user, ['password']);
+      return exclude(user, ['password']);
+    } catch (error) {
+      const user = await this.prisma.user.create({
+        data: {
+          login: createUserDto.login,
+          password: hashedPassword,
+          createdAt: new Date().getTime(),
+          updatedAt: new Date().getTime(),
+        },
+      });
+
+      return exclude(user, ['password']);
+    }
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
