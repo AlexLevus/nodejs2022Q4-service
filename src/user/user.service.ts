@@ -43,7 +43,7 @@ export class UserService {
   }
 
   async getUser(login: string) {
-    const user = await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findFirst({
       where: { login },
     });
 
@@ -60,39 +60,18 @@ export class UserService {
   async create(createUserDto: CreateUserDto) {
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-    const isUserCreated = await this.prisma.user.findUnique({
-      where: { login: createUserDto.login },
-    });
-
-    if (isUserCreated) {
-      return exclude(isUserCreated, ['password']);
-    }
-
-    try {
-      const user = await this.prisma.user
-        .create({
-          data: {
-            login: createUserDto.login,
-            password: hashedPassword,
-            createdAt: new Date().getTime(),
-            updatedAt: new Date().getTime(),
-          },
-        })
-        .catch();
-
-      return exclude(user, ['password']);
-    } catch (error) {
-      const user = await this.prisma.user.create({
+    const user = await this.prisma.user
+      .create({
         data: {
           login: createUserDto.login,
           password: hashedPassword,
           createdAt: new Date().getTime(),
           updatedAt: new Date().getTime(),
         },
-      });
+      })
+      .catch();
 
-      return exclude(user, ['password']);
-    }
+    return exclude(user, ['password']);
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
