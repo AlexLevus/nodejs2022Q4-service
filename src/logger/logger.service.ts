@@ -1,4 +1,4 @@
-import {Injectable, ConsoleLogger, Scope} from '@nestjs/common';
+import { Injectable, ConsoleLogger, Scope } from '@nestjs/common';
 
 import { existsSync } from 'fs';
 
