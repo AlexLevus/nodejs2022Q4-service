@@ -1,0 +1,32 @@
+services:
+  db:
+    build:
+      context: .
+      dockerfile: ./prisma/Dockerfile
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - ${POSTGRES_PORT}:${POSTGRES_PORT_EXPOSE}
+    volumes:
+      - data:/var/lib/postgresql
+    networks:
+      - my-net
+  api:
+    build:
+      context: .
+      dockerfile: ./src/Dockerfile
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - ${PORT}:${PORT}
+    depends_on:
+      - db
+    networks:
+      - my-net
+
+volumes:
+  data:
+networks:
+  my-net:

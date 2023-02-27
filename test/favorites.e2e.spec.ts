@@ -75,6 +75,7 @@ describe('Favorites (e2e)', () => {
   });
 
   describe('GET (advanced)', () => {
+    jest.setTimeout(20000);
     it('should correctly get all favorites entities', async () => {
       const createArtistResponse = await unauthorizedRequest
         .post(artistsRoutes.create)
